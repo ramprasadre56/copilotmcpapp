@@ -19,6 +19,8 @@ export function McpAppHost({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAppReady, setIsAppReady] = useState(false);
+  const pendingResultRef = useRef<string | object | null>(null);
+  const resultSentRef = useRef(false);
 
   // Load the UI resource HTML
   useEffect(() => {
@@ -63,8 +65,34 @@ export function McpAppHost({
       const { method, params, id } = event.data || {};
 
       if (method === "ui/notifications/app-initialized") {
+        console.log("App initialized, isAppReady = true");
         setIsAppReady(true);
         setIsLoading(false);
+
+        // Send pending result if we have one
+        if (pendingResultRef.current && !resultSentRef.current) {
+          setTimeout(() => {
+            if (pendingResultRef.current) {
+              const result = pendingResultRef.current;
+              const resultData = typeof result === "string" ? result : JSON.stringify(result);
+              const structuredContent = typeof result === "object" ? result : tryParseJSON(resultData);
+
+              iframeRef.current?.contentWindow?.postMessage(
+                {
+                  jsonrpc: "2.0",
+                  method: "ui/notifications/tool-result",
+                  params: {
+                    content: [{ type: "text", text: resultData }],
+                    structuredContent,
+                  },
+                },
+                "*"
+              );
+              resultSentRef.current = true;
+              console.log("Sent pending result on app init");
+            }
+          }, 100);
+        }
       }
 
       // Handle tool calls from the iframe
@@ -119,27 +147,48 @@ export function McpAppHost({
     }
   }, [isAppReady, toolInput]);
 
-  // Send tool result when available
-  useEffect(() => {
-    if (isAppReady && toolResult && iframeRef.current?.contentWindow) {
-      const resultData =
-        typeof toolResult === "string" ? toolResult : JSON.stringify(toolResult);
-      const structuredContent =
-        typeof toolResult === "object" ? toolResult : tryParseJSON(toolResult);
+  // Helper to send tool result to iframe
+  const sendToolResult = useCallback((result: string | object) => {
+    if (!iframeRef.current?.contentWindow) return;
 
-      iframeRef.current.contentWindow.postMessage(
-        {
-          jsonrpc: "2.0",
-          method: "ui/notifications/tool-result",
-          params: {
-            content: [{ type: "text", text: resultData }],
-            structuredContent,
-          },
+    const resultData = typeof result === "string" ? result : JSON.stringify(result);
+    const structuredContent = typeof result === "object" ? result : tryParseJSON(resultData);
+
+    console.log("Sending tool result to iframe:", { resultData, structuredContent });
+
+    iframeRef.current.contentWindow.postMessage(
+      {
+        jsonrpc: "2.0",
+        method: "ui/notifications/tool-result",
+        params: {
+          content: [{ type: "text", text: resultData }],
+          structuredContent,
         },
-        "*"
-      );
+      },
+      "*"
+    );
+    resultSentRef.current = true;
+  }, []);
+
+  // Send tool result when available and app is ready
+  useEffect(() => {
+    // Store result for later if app isn't ready yet
+    if (toolResult) {
+      pendingResultRef.current = toolResult;
     }
-  }, [isAppReady, toolResult]);
+
+    // Send result if app is ready and we have a result we haven't sent
+    if (isAppReady && toolResult && !resultSentRef.current) {
+      sendToolResult(toolResult);
+    }
+  }, [isAppReady, toolResult, sendToolResult]);
+
+  // Also send pending result when app becomes ready
+  useEffect(() => {
+    if (isAppReady && pendingResultRef.current && !resultSentRef.current) {
+      sendToolResult(pendingResultRef.current);
+    }
+  }, [isAppReady, sendToolResult]);
 
   // Send host context (theme)
   const sendHostContext = useCallback(() => {

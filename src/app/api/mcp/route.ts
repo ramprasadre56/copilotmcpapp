@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const MCP_SERVER_URL = process.env.MCP_SERVER_URL || "http://localhost:3100/mcp";
+const MCP_SERVER_URL = process.env.MCP_SERVER_URL || "http://localhost:3100";
 
 export async function POST(req: NextRequest) {
   try {
     const { toolName, args } = await req.json();
 
-    const response = await fetch(MCP_SERVER_URL, {
+    const response = await fetch(`${MCP_SERVER_URL}/mcp`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

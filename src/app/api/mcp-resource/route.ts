@@ -29,17 +29,20 @@ export async function GET(req: NextRequest) {
     const appName = resourceUri.match(/^ui:\/\/([^/]+)/)?.[1];
 
     if (appName) {
-      const directResponse = await fetch(`${MCP_SERVER_URL}/resource/${appName}`);
+      const directResponse = await fetch(`${MCP_SERVER_URL}/resource/${appName}`, {
+        cache: "no-store",
+      });
 
       if (directResponse.ok) {
         const html = await directResponse.text();
         return new NextResponse(html, {
           headers: {
             "Content-Type": "text/html",
-            "Cache-Control": "public, max-age=3600",
+            "Cache-Control": "no-cache",
           },
         });
       }
+      console.log(`Direct resource fetch failed for ${appName}: ${directResponse.status}`);
     }
 
     // Fallback to MCP protocol
@@ -50,9 +53,12 @@ export async function GET(req: NextRequest) {
         method: "resources/read",
         params: { uri: resourceUri },
       }),
+      cache: "no-store",
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`MCP fallback failed: ${response.status} - ${errorText}`);
       throw new Error(`MCP server error: ${response.statusText}`);
     }
 
@@ -62,7 +68,7 @@ export async function GET(req: NextRequest) {
       return new NextResponse(data.contents[0].text, {
         headers: {
           "Content-Type": "text/html",
-          "Cache-Control": "public, max-age=3600",
+          "Cache-Control": "no-cache",
         },
       });
     }
