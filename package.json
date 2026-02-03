@@ -3,12 +3,22 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "concurrently \"npm run dev:next\" \"npm run dev:mcp\"",
+    "dev:next": "next dev",
+    "dev:mcp": "cd mcp-server && npm run dev",
     "build": "next build",
+    "build:mcp": "cd mcp-server && npm run build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "mcp:install": "cd mcp-server && npm install",
+    "mcp:legacy": "cd mcp-server && npm run legacy"
   },
   "dependencies": {
+    "@ag-ui/mcp-apps-middleware": "^0.0.3",
+    "@copilotkit/react-core": "^1.51.3",
+    "@copilotkit/react-ui": "^1.51.3",
+    "@copilotkit/runtime": "^1.51.3",
+    "@google/generative-ai": "^0.24.1",
     "next": "16.1.6",
     "react": "19.2.3",
     "react-dom": "19.2.3"
@@ -18,6 +28,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "concurrently": "^9.2.1",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "tailwindcss": "^4",
