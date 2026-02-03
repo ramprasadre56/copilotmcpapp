@@ -49,6 +49,14 @@ export function ChatTab() {
         <ArchitectureDiagram />
       </section>
 
+      {/* Detailed Technical Architecture */}
+      <section>
+        <h2 className="text-xl font-semibold text-slate-800 dark:text-white mb-4">
+          Technical Architecture
+        </h2>
+        <DetailedArchitecture />
+      </section>
+
       {/* Getting Started */}
       <section className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-6">
         <h2 className="text-xl font-semibold text-slate-800 dark:text-white mb-4">

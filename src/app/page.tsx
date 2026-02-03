@@ -241,6 +241,307 @@ function DynamicToolRegistration() {
     },
   });
 
+  // ===== EXT-APPS TOOLS =====
+
+  // Interactive Map tool
+  useCopilotAction({
+    name: "show_map",
+    description: "Display an interactive 3D globe map. Use geocode first to get coordinates, then visualize on the map.",
+    parameters: [
+      { name: "west", type: "number", description: "Western longitude (-180 to 180)", required: false },
+      { name: "south", type: "number", description: "Southern latitude (-90 to 90)", required: false },
+      { name: "east", type: "number", description: "Eastern longitude (-180 to 180)", required: false },
+      { name: "north", type: "number", description: "Northern latitude (-90 to 90)", required: false },
+      { name: "label", type: "string", description: "Optional label to display on the map", required: false },
+    ],
+    handler: async ({ west, south, east, north, label }) => {
+      if (!isAppEnabled("show_map")) {
+        return "Map tool is currently disabled. Enable it in the Apps tab.";
+      }
+      console.log("Showing map");
+      return await callMCPTool("show_map", { west, south, east, north, label });
+    },
+    render: ({ args, result }) => {
+      if (!isAppEnabled("show_map")) {
+        return <DisabledToolMessage toolName="Interactive Map" />;
+      }
+      return (
+        <McpAppHost
+          toolName="show_map"
+          toolInput={args}
+          toolResult={result}
+          height={400}
+        />
+      );
+    },
+  });
+
+  // Geocoder tool
+  useCopilotAction({
+    name: "geocode",
+    description: "Search for places using OpenStreetMap. Returns coordinates and bounding boxes for locations.",
+    parameters: [
+      { name: "query", type: "string", description: "Place name or address to search", required: true },
+    ],
+    handler: async ({ query }) => {
+      if (!isAppEnabled("geocode")) {
+        return "Geocoder tool is currently disabled. Enable it in the Apps tab.";
+      }
+      console.log("Geocoding:", query);
+      return await callMCPTool("geocode", { query });
+    },
+    render: ({ result }) => {
+      if (!isAppEnabled("geocode")) {
+        return <DisabledToolMessage toolName="Geocoder" />;
+      }
+      if (!result) return <div className="text-gray-500">Searching location...</div>;
+      return (
+        <div className="p-4 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-xl text-white shadow-lg max-w-md">
+          <div className="text-sm opacity-80 mb-2">📍 Geocode Result</div>
+          <pre className="text-xs bg-white/20 rounded p-2 overflow-auto max-h-40">{result}</pre>
+        </div>
+      );
+    },
+  });
+
+  // 3D Scene Viewer tool
+  useCopilotAction({
+    name: "show_threejs_scene",
+    description: "Render interactive 3D scenes with Three.js. Create custom visualizations with JavaScript code.",
+    parameters: [
+      { name: "code", type: "string", description: "JavaScript code to render the 3D scene", required: true },
+      { name: "height", type: "number", description: "Height in pixels (default: 400)", required: false },
+    ],
+    handler: async ({ code, height }) => {
+      if (!isAppEnabled("show_threejs_scene")) {
+        return "3D Scene tool is currently disabled. Enable it in the Apps tab.";
+      }
+      console.log("Showing 3D scene");
+      return await callMCPTool("show_threejs_scene", { code, height });
+    },
+    render: ({ args, result }) => {
+      if (!isAppEnabled("show_threejs_scene")) {
+        return <DisabledToolMessage toolName="3D Scene Viewer" />;
+      }
+      return (
+        <McpAppHost
+          toolName="show_threejs_scene"
+          toolInput={args}
+          toolResult={result}
+          height={args.height || 400}
+        />
+      );
+    },
+  });
+
+  // PDF Viewer tool
+  useCopilotAction({
+    name: "display_pdf",
+    description: "Display interactive PDF documents. Supports academic sources like arxiv.org, biorxiv.org.",
+    parameters: [
+      { name: "url", type: "string", description: "PDF URL (e.g., 'https://arxiv.org/pdf/1706.03762')", required: true },
+      { name: "page", type: "number", description: "Initial page number (default: 1)", required: false },
+    ],
+    handler: async ({ url, page }) => {
+      if (!isAppEnabled("display_pdf")) {
+        return "PDF Viewer tool is currently disabled. Enable it in the Apps tab.";
+      }
+      console.log("Displaying PDF:", url);
+      return await callMCPTool("display_pdf", { url, page });
+    },
+    render: ({ args, result }) => {
+      if (!isAppEnabled("display_pdf")) {
+        return <DisabledToolMessage toolName="PDF Viewer" />;
+      }
+      return (
+        <McpAppHost
+          toolName="display_pdf"
+          toolInput={args}
+          toolResult={result}
+          height={500}
+        />
+      );
+    },
+  });
+
+  // Shader Playground tool
+  useCopilotAction({
+    name: "show_shader",
+    description: "Render interactive WebGL shaders. Write GLSL code with access to uniforms like iTime, iResolution.",
+    parameters: [
+      { name: "code", type: "string", description: "GLSL fragment shader code", required: true },
+      { name: "height", type: "number", description: "Height in pixels (default: 400)", required: false },
+    ],
+    handler: async ({ code, height }) => {
+      if (!isAppEnabled("show_shader")) {
+        return "Shader tool is currently disabled. Enable it in the Apps tab.";
+      }
+      console.log("Showing shader");
+      return await callMCPTool("show_shader", { code, height });
+    },
+    render: ({ args, result }) => {
+      if (!isAppEnabled("show_shader")) {
+        return <DisabledToolMessage toolName="Shader Playground" />;
+      }
+      return (
+        <McpAppHost
+          toolName="show_shader"
+          toolInput={args}
+          toolResult={result}
+          height={args.height || 400}
+        />
+      );
+    },
+  });
+
+  // Sheet Music tool
+  useCopilotAction({
+    name: "show_sheet_music",
+    description: "Display interactive sheet music notation using ABC notation format. Play and view music scores.",
+    parameters: [
+      { name: "abc", type: "string", description: "ABC notation string for the music", required: true },
+      { name: "title", type: "string", description: "Title of the piece", required: false },
+    ],
+    handler: async ({ abc, title }) => {
+      if (!isAppEnabled("show_sheet_music")) {
+        return "Sheet Music tool is currently disabled. Enable it in the Apps tab.";
+      }
+      console.log("Showing sheet music");
+      return await callMCPTool("show_sheet_music", { abc, title });
+    },
+    render: ({ args, result }) => {
+      if (!isAppEnabled("show_sheet_music")) {
+        return <DisabledToolMessage toolName="Sheet Music" />;
+      }
+      return (
+        <McpAppHost
+          toolName="show_sheet_music"
+          toolInput={args}
+          toolResult={result}
+          height={400}
+        />
+      );
+    },
+  });
+
+  // Wikipedia Explorer tool
+  useCopilotAction({
+    name: "explore_wiki",
+    description: "Interactive Wikipedia article explorer with search and navigation. Use this when users ask about topics that would benefit from Wikipedia information.",
+    parameters: [
+      { name: "query", type: "string", description: "Wikipedia article title or search query", required: true },
+      { name: "lang", type: "string", description: "Wikipedia language code (default: 'en')", required: false },
+    ],
+    handler: async ({ query, lang }) => {
+      if (!isAppEnabled("explore_wiki")) {
+        return "Wikipedia Explorer tool is currently disabled. Enable it in the Apps tab.";
+      }
+      console.log("Exploring Wikipedia:", query);
+      return await callMCPTool("explore_wiki", { query, lang });
+    },
+    render: ({ args, result }) => {
+      if (!isAppEnabled("explore_wiki")) {
+        return <DisabledToolMessage toolName="Wikipedia Explorer" />;
+      }
+      return (
+        <McpAppHost
+          toolName="explore_wiki"
+          toolInput={args}
+          toolResult={result}
+          height={500}
+        />
+      );
+    },
+  });
+
+  // Budget Allocator tool
+  useCopilotAction({
+    name: "allocate_budget",
+    description: "Interactive budget allocation tool with drag-and-drop categories and visual breakdown charts.",
+    parameters: [
+      { name: "totalBudget", type: "number", description: "Total budget amount", required: true },
+      { name: "currency", type: "string", description: "Currency symbol (default: '$')", required: false },
+    ],
+    handler: async ({ totalBudget, currency }) => {
+      if (!isAppEnabled("allocate_budget")) {
+        return "Budget Allocator tool is currently disabled. Enable it in the Apps tab.";
+      }
+      console.log("Allocating budget:", totalBudget);
+      return await callMCPTool("allocate_budget", { totalBudget, currency });
+    },
+    render: ({ args, result }) => {
+      if (!isAppEnabled("allocate_budget")) {
+        return <DisabledToolMessage toolName="Budget Allocator" />;
+      }
+      return (
+        <McpAppHost
+          toolName="allocate_budget"
+          toolInput={args}
+          toolResult={result}
+          height={500}
+        />
+      );
+    },
+  });
+
+  // System Monitor tool
+  useCopilotAction({
+    name: "show_system_monitor",
+    description: "Interactive system monitoring dashboard with CPU, memory, and disk usage charts.",
+    parameters: [
+      { name: "refreshInterval", type: "number", description: "Refresh interval in milliseconds (default: 1000)", required: false },
+    ],
+    handler: async ({ refreshInterval }) => {
+      if (!isAppEnabled("show_system_monitor")) {
+        return "System Monitor tool is currently disabled. Enable it in the Apps tab.";
+      }
+      console.log("Showing system monitor");
+      return await callMCPTool("show_system_monitor", { refreshInterval });
+    },
+    render: ({ args, result }) => {
+      if (!isAppEnabled("show_system_monitor")) {
+        return <DisabledToolMessage toolName="System Monitor" />;
+      }
+      return (
+        <McpAppHost
+          toolName="show_system_monitor"
+          toolInput={args}
+          toolResult={result}
+          height={400}
+        />
+      );
+    },
+  });
+
+  // Transcript Viewer tool
+  useCopilotAction({
+    name: "show_transcript",
+    description: "Interactive transcript viewer with timestamps, speaker labels, and search functionality.",
+    parameters: [
+      { name: "title", type: "string", description: "Title of the transcript", required: false },
+    ],
+    handler: async ({ title }) => {
+      if (!isAppEnabled("show_transcript")) {
+        return "Transcript Viewer tool is currently disabled. Enable it in the Apps tab.";
+      }
+      console.log("Showing transcript");
+      return await callMCPTool("show_transcript", { title });
+    },
+    render: ({ args, result }) => {
+      if (!isAppEnabled("show_transcript")) {
+        return <DisabledToolMessage toolName="Transcript Viewer" />;
+      }
+      return (
+        <McpAppHost
+          toolName="show_transcript"
+          toolInput={args}
+          toolResult={result}
+          height={400}
+        />
+      );
+    },
+  });
+
   return null;
 }
 

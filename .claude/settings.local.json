@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(powershell -Command \"\\(Invoke-WebRequest -Uri ''https://api.github.com/repos/modelcontextprotocol/ext-apps/contents/src'' -UseBasicParsing\\).Content | ConvertFrom-Json | ForEach-Object { $_name }\")",
+      "Bash(powershell -Command \"\\(Invoke-WebRequest -Uri ''https://api.github.com/repos/modelcontextprotocol/ext-apps/contents/examples'' -UseBasicParsing\\).Content | ConvertFrom-Json | ForEach-Object { $_name }\")",
+      "Bash(git clone:*)",
+      "Bash(git pull:*)"
+    ]
+  }
+}
