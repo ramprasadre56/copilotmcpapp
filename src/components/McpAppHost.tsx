@@ -19,8 +19,15 @@ export function McpAppHost({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAppReady, setIsAppReady] = useState(false);
+  const [htmlContent, setHtmlContent] = useState<string | null>(null);
   const pendingResultRef = useRef<string | object | null>(null);
   const resultSentRef = useRef(false);
+  const toolInputRef = useRef(toolInput);
+  toolInputRef.current = toolInput;
+  // Track if this is an ext-apps based app (uses ui/initialize protocol)
+  const isExtAppsRef = useRef(false);
+  // Ref to track ready state for closures
+  const isAppReadyRef = useRef(false);
 
   // Load the UI resource HTML
   useEffect(() => {
@@ -36,17 +43,7 @@ export function McpAppHost({
         }
 
         const html = await response.text();
-
-        // Create a blob URL for the HTML
-        const blob = new Blob([html], { type: "text/html" });
-        const blobUrl = URL.createObjectURL(blob);
-
-        if (iframeRef.current) {
-          iframeRef.current.src = blobUrl;
-        }
-
-        // Clean up blob URL after iframe loads
-        return () => URL.revokeObjectURL(blobUrl);
+        setHtmlContent(html);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load UI");
         setIsLoading(false);
@@ -63,47 +60,102 @@ export function McpAppHost({
       if (event.source !== iframeRef.current?.contentWindow) return;
 
       const { method, params, id } = event.data || {};
+      console.log("Received message from iframe:", { method, params, id });
 
-      if (method === "ui/notifications/app-initialized") {
-        console.log("App initialized, isAppReady = true");
+      // Handle initialization REQUEST from ext-apps (ui/initialize - has id, needs response)
+      // This is the official ext-apps protocol from @modelcontextprotocol/ext-apps
+      if (method === "ui/initialize" && id !== undefined) {
+        console.log("App requesting initialization (ext-apps protocol)");
+        isExtAppsRef.current = true;
+
+        const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+
+        // Respond to initialization request with full protocol response
+        iframeRef.current?.contentWindow?.postMessage(
+          {
+            jsonrpc: "2.0",
+            id,
+            result: {
+              protocolVersion: "2025-01-01",
+              hostCapabilities: {
+                openLinks: {},
+                serverTools: {},
+                logging: {},
+              },
+              hostInfo: { name: "McpAppHost", version: "1.0.0" },
+              hostContext: {
+                theme: isDark ? "dark" : "light",
+                platform: "web",
+              },
+            },
+          },
+          "*"
+        );
+        // Don't set ready yet - wait for the initialized notification
+      }
+
+      // Handle initialized NOTIFICATION from ext-apps (ui/notifications/initialized - no id)
+      // This is sent by the app after it processes the initialize response
+      if (method === "ui/notifications/initialized") {
+        console.log("App initialized notification received (ext-apps)");
+        isAppReadyRef.current = true;
         setIsAppReady(true);
         setIsLoading(false);
 
-        // Send pending result if we have one
-        if (pendingResultRef.current && !resultSentRef.current) {
-          setTimeout(() => {
-            if (pendingResultRef.current) {
-              const result = pendingResultRef.current;
-              const resultData = typeof result === "string" ? result : JSON.stringify(result);
-              const structuredContent = typeof result === "object" ? result : tryParseJSON(resultData);
-
-              iframeRef.current?.contentWindow?.postMessage(
-                {
-                  jsonrpc: "2.0",
-                  method: "ui/notifications/tool-result",
-                  params: {
-                    content: [{ type: "text", text: resultData }],
-                    structuredContent,
-                  },
+        // Send tool input now that app is ready
+        setTimeout(() => {
+          if (toolInputRef.current && iframeRef.current?.contentWindow) {
+            console.log("Sending tool-input after initialized (ext-apps):", toolInputRef.current);
+            iframeRef.current.contentWindow.postMessage(
+              {
+                jsonrpc: "2.0",
+                method: "ui/notifications/tool-input",
+                params: { arguments: toolInputRef.current },
+              },
+              "*"
+            );
+          }
+          // Send pending result
+          if (pendingResultRef.current && !resultSentRef.current) {
+            const result = pendingResultRef.current;
+            const resultData = typeof result === "string" ? result : JSON.stringify(result);
+            const structuredContent = typeof result === "object" ? result : tryParseJSON(resultData);
+            iframeRef.current?.contentWindow?.postMessage(
+              {
+                jsonrpc: "2.0",
+                method: "ui/notifications/tool-result",
+                params: {
+                  content: [{ type: "text", text: resultData }],
+                  structuredContent,
                 },
-                "*"
-              );
-              resultSentRef.current = true;
-              console.log("Sent pending result on app init");
-            }
-          }, 100);
-        }
+              },
+              "*"
+            );
+            resultSentRef.current = true;
+          }
+        }, 50);
       }
 
-      // Handle tool calls from the iframe
-      if (method === "tools/call") {
+      // Handle simple app protocol (ui/notifications/app-initialized)
+      if (method === "ui/notifications/app-initialized") {
+        console.log("App initialized notification received (simple protocol)");
+        isAppReadyRef.current = true;
+        setIsAppReady(true);
+        setIsLoading(false);
+      }
+
+      // Handle tool calls from the iframe (works for both protocols)
+      if (method === "tools/call" && id !== undefined) {
         try {
           const response = await fetch("/api/mcp", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              toolName: params.name,
-              args: params.arguments,
+              method: "tools/call",
+              params: {
+                name: params.name,
+                arguments: params.arguments,
+              },
             }),
           });
 
@@ -113,17 +165,40 @@ export function McpAppHost({
           iframeRef.current?.contentWindow?.postMessage(
             {
               jsonrpc: "2.0",
-              method: "ui/notifications/tool-result",
-              params: {
-                content: [{ type: "text", text: data.result }],
-                structuredContent: tryParseJSON(data.result),
-              },
+              id,
+              result: data,
             },
             "*"
           );
         } catch (err) {
           console.error("Tool call error:", err);
+          iframeRef.current?.contentWindow?.postMessage(
+            {
+              jsonrpc: "2.0",
+              id,
+              error: { code: -32000, message: String(err) },
+            },
+            "*"
+          );
         }
+      }
+
+      // Handle size change notifications from app
+      if (method === "ui/notifications/size-changed") {
+        console.log("App size changed:", params);
+        // Could adjust iframe height here if needed
+      }
+
+      // Handle ping requests
+      if (method === "ping" && id !== undefined) {
+        iframeRef.current?.contentWindow?.postMessage(
+          {
+            jsonrpc: "2.0",
+            id,
+            result: {},
+          },
+          "*"
+        );
       }
     };
 
@@ -134,6 +209,7 @@ export function McpAppHost({
   // Send tool input when app is ready
   useEffect(() => {
     if (isAppReady && toolInput && iframeRef.current?.contentWindow) {
+      console.log("Sending tool-input to iframe:", toolInput);
       iframeRef.current.contentWindow.postMessage(
         {
           jsonrpc: "2.0",
@@ -276,20 +352,39 @@ export function McpAppHost({
           </div>
         </div>
       )}
-      <iframe
-        ref={iframeRef}
-        title={`${toolName} MCP App`}
-        sandbox="allow-scripts allow-same-origin"
-        style={{
-          width: "100%",
-          height: `${height}px`,
-          border: "none",
-          display: "block",
-        }}
-        onLoad={() => {
-          // The app will notify us when it's truly ready via postMessage
-        }}
-      />
+      {htmlContent && (
+        <IframeWithDocWrite
+          iframeRef={iframeRef}
+          htmlContent={htmlContent}
+          toolName={toolName}
+          height={height}
+          onContentLoaded={() => {
+            console.log("Iframe content loaded, waiting for app to initialize...");
+            // For simple apps that don't send any initialization message,
+            // set a fallback timeout to mark as ready
+            setTimeout(() => {
+              if (!isAppReadyRef.current) {
+                console.log("Fallback: marking app as ready after timeout");
+                isAppReadyRef.current = true;
+                setIsLoading(false);
+                setIsAppReady(true);
+
+                // Send tool input for simple apps that might be waiting
+                if (iframeRef.current?.contentWindow && toolInputRef.current) {
+                  iframeRef.current.contentWindow.postMessage(
+                    {
+                      jsonrpc: "2.0",
+                      method: "ui/notifications/tool-input",
+                      params: { arguments: toolInputRef.current },
+                    },
+                    "*"
+                  );
+                }
+              }
+            }, 1500);
+          }}
+        />
+      )}
       <style>
         {`
           @keyframes spin {
@@ -308,4 +403,70 @@ function tryParseJSON(str: string): object | null {
   } catch {
     return null;
   }
+}
+
+// Component that uses document.write instead of srcDoc for WebGL compatibility
+// CesiumJS and other WebGL-based libraries don't work properly with srcDoc iframes
+interface IframeWithDocWriteProps {
+  iframeRef: React.RefObject<HTMLIFrameElement | null>;
+  htmlContent: string;
+  toolName: string;
+  height: number;
+  onContentLoaded: () => void;
+}
+
+function IframeWithDocWrite({
+  iframeRef,
+  htmlContent,
+  toolName,
+  height,
+  onContentLoaded,
+}: IframeWithDocWriteProps) {
+  const hasInjectedRef = useRef(false);
+
+  useEffect(() => {
+    if (hasInjectedRef.current) return;
+
+    const iframe = iframeRef.current;
+    if (!iframe) return;
+
+    // Wait for iframe to be ready
+    const injectContent = () => {
+      try {
+        const doc = iframe.contentDocument || iframe.contentWindow?.document;
+        if (doc) {
+          hasInjectedRef.current = true;
+          doc.open();
+          doc.write(htmlContent);
+          doc.close();
+          console.log("HTML content injected via document.write");
+          onContentLoaded();
+        }
+      } catch (err) {
+        console.error("Failed to inject HTML:", err);
+      }
+    };
+
+    // If iframe is already loaded, inject immediately
+    if (iframe.contentDocument?.readyState === "complete") {
+      injectContent();
+    } else {
+      // Otherwise wait for load event
+      iframe.addEventListener("load", injectContent, { once: true });
+    }
+  }, [htmlContent, iframeRef, onContentLoaded]);
+
+  return (
+    <iframe
+      ref={iframeRef}
+      title={`${toolName} MCP App`}
+      sandbox="allow-scripts allow-same-origin allow-forms"
+      style={{
+        width: "100%",
+        height: `${height}px`,
+        border: "none",
+        display: "block",
+      }}
+    />
+  );
 }

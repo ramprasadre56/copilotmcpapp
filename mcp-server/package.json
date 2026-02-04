@@ -8,9 +8,21 @@
     "start": "node dist/server.js",
     "dev": "tsx watch src/server.ts",
     "build": "npm run build:apps && npm run build:server",
-    "build:apps": "npm run build:weather && npm run build:calculator",
+    "build:apps": "npm run build:weather && npm run build:calculator && npm run build:map && npm run build:threejs && npm run build:pdf && npm run build:shadertoy && npm run build:sheet-music && npm run build:wiki && npm run build:budget && npm run build:system-monitor && npm run build:transcript && npm run build:cohort-heatmap && npm run build:scenario-modeler && npm run build:customer-segmentation",
     "build:weather": "set APP_NAME=weather&& vite build",
     "build:calculator": "set APP_NAME=calculator&& vite build",
+    "build:map": "set APP_NAME=map&& vite build",
+    "build:threejs": "set APP_NAME=threejs&& vite build",
+    "build:pdf": "set APP_NAME=pdf&& vite build",
+    "build:shadertoy": "set APP_NAME=shadertoy&& vite build",
+    "build:sheet-music": "set APP_NAME=sheet-music&& vite build",
+    "build:wiki": "set APP_NAME=wiki&& vite build",
+    "build:budget": "set APP_NAME=budget&& vite build",
+    "build:system-monitor": "set APP_NAME=system-monitor&& vite build",
+    "build:transcript": "set APP_NAME=transcript&& vite build",
+    "build:cohort-heatmap": "set APP_NAME=cohort-heatmap&& vite build",
+    "build:scenario-modeler": "set APP_NAME=scenario-modeler&& vite build",
+    "build:customer-segmentation": "set APP_NAME=customer-segmentation&& vite build",
     "build:server": "tsc",
     "legacy": "node index.js"
   },
@@ -21,9 +33,17 @@
     "express": "^4.18.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "zod": "^4.3.6"
+    "zod": "^4.3.6",
+    "three": "^0.160.0",
+    "pdfjs-dist": "^4.0.0",
+    "abcjs": "^6.2.0",
+    "cheerio": "^1.0.0",
+    "chart.js": "^4.4.0",
+    "systeminformation": "^5.21.0",
+    "force-graph": "^1.43.0"
   },
   "devDependencies": {
+    "@types/args": "^5.0.4",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/node": "^20.10.0",
@@ -33,6 +53,8 @@
     "tsx": "^4.7.0",
     "typescript": "^5.3.0",
     "vite": "^5.0.0",
-    "vite-plugin-singlefile": "^0.13.5"
+    "vite-plugin-singlefile": "^0.13.5",
+    "@types/three": "^0.160.0",
+    "@types/dom-speech-recognition": "^0.0.1"
   }
 }

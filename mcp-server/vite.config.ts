@@ -10,7 +10,7 @@ export default defineConfig({
   plugins: [react(), viteSingleFile()],
   root: path.resolve(__dirname, `src/apps/${appName}`),
   build: {
-    outDir: path.resolve(__dirname, "dist/apps"),
-    emptyOutDir: false,
+    outDir: path.resolve(__dirname, `dist/apps/${appName}`),
+    emptyOutDir: true,
   },
 });

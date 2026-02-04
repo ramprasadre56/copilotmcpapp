@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import * as fs from "fs/promises";
 import * as path from "path";
+import * as os from "os";
 import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -304,6 +305,14 @@ const tools = [
       },
     },
   },
+  {
+    name: "poll-system-stats",
+    description: "Poll current system CPU and memory statistics for the system monitor.",
+    inputSchema: {
+      type: "object",
+      properties: {},
+    },
+  },
 
   // ===== Transcript Tools (from ext-apps/transcript-server) =====
   {
@@ -334,6 +343,96 @@ const tools = [
     _meta: {
       ui: {
         resourceUri: "ui://transcript/app.html",
+      },
+    },
+  },
+
+  // ===== Cohort Heatmap Tools (from ext-apps/cohort-heatmap-server) =====
+  {
+    name: "show_cohort_heatmap",
+    description: "Display an interactive cohort retention heatmap showing customer retention over time by signup month.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        metric: {
+          type: "string",
+          enum: ["retention", "revenue", "active"],
+          description: "Metric type (default: 'retention')",
+        },
+        periodType: {
+          type: "string",
+          enum: ["monthly", "weekly"],
+          description: "Period type (default: 'monthly')",
+        },
+        cohortCount: {
+          type: "number",
+          description: "Number of cohorts to display (default: 12)",
+        },
+        maxPeriods: {
+          type: "number",
+          description: "Maximum number of periods (default: 12)",
+        },
+      },
+    },
+    _meta: {
+      ui: {
+        resourceUri: "ui://cohort-heatmap/app.html",
+      },
+    },
+  },
+
+  // ===== Scenario Modeler Tools (from ext-apps/scenario-modeler-server) =====
+  {
+    name: "show_scenario_modeler",
+    description: "Display an interactive SaaS business scenario modeler with financial projections and template scenarios.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        startingMRR: {
+          type: "number",
+          description: "Starting monthly recurring revenue",
+        },
+        monthlyGrowthRate: {
+          type: "number",
+          description: "Monthly growth rate percentage",
+        },
+        monthlyChurnRate: {
+          type: "number",
+          description: "Monthly churn rate percentage",
+        },
+        grossMargin: {
+          type: "number",
+          description: "Gross margin percentage",
+        },
+        fixedCosts: {
+          type: "number",
+          description: "Monthly fixed costs",
+        },
+      },
+    },
+    _meta: {
+      ui: {
+        resourceUri: "ui://scenario-modeler/app.html",
+      },
+    },
+  },
+
+  // ===== Customer Segmentation Tools (from ext-apps/customer-segmentation-server) =====
+  {
+    name: "show_customer_segmentation",
+    description: "Display an interactive customer segmentation explorer with scatter/bubble visualization.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        customerCount: {
+          type: "number",
+          description: "Number of customers to generate (default: 250)",
+        },
+      },
+    },
+    _meta: {
+      ui: {
+        resourceUri: "ui://customer-segmentation/app.html",
       },
     },
   },
@@ -631,11 +730,49 @@ async function handleToolCall(
 
     // ===== System Monitor Tools =====
     case "show_system_monitor": {
-      const refreshInterval = (args.refreshInterval as number) || 1000;
+      // Return static system info for the UI
+      const cpus = os.cpus();
+      const systemInfo = {
+        hostname: os.hostname(),
+        platform: `${os.type()} ${os.release()}`,
+        arch: os.arch(),
+        cpu: {
+          model: cpus[0]?.model || "Unknown",
+          count: cpus.length,
+        },
+        memory: {
+          totalBytes: os.totalmem(),
+        },
+      };
       return {
         content: [{ type: "text", text: "System monitor started" }],
-        structuredContent: { refreshInterval },
+        structuredContent: systemInfo,
         _meta: { viewUUID: crypto.randomUUID() },
+      };
+    }
+
+    case "poll-system-stats": {
+      // Return dynamic CPU and memory stats
+      const cpuInfo = os.cpus();
+      const cores = cpuInfo.map((cpu) => {
+        const total = Object.values(cpu.times).reduce((a, b) => a + b, 0);
+        return { idle: cpu.times.idle, total };
+      });
+      const totalMem = os.totalmem();
+      const freeMem = os.freemem();
+      const usedMem = totalMem - freeMem;
+      return {
+        content: [{ type: "text", text: "System stats polled" }],
+        structuredContent: {
+          cpu: { cores },
+          memory: {
+            usedBytes: usedMem,
+            usedPercent: Math.round((usedMem / totalMem) * 100),
+            freeBytes: freeMem,
+          },
+          uptime: { seconds: Math.floor(os.uptime()) },
+          timestamp: new Date().toISOString(),
+        },
       };
     }
 
@@ -650,6 +787,43 @@ async function handleToolCall(
       };
     }
 
+    // ===== Cohort Heatmap Tools =====
+    case "show_cohort_heatmap": {
+      const metric = (args.metric as string) || "retention";
+      const periodType = (args.periodType as string) || "monthly";
+      const cohortCount = (args.cohortCount as number) || 12;
+      const maxPeriods = (args.maxPeriods as number) || 12;
+      return {
+        content: [{ type: "text", text: `Displaying cohort heatmap: ${metric} over ${periodType} periods` }],
+        structuredContent: { metric, periodType, cohortCount, maxPeriods },
+        _meta: { viewUUID: crypto.randomUUID() },
+      };
+    }
+
+    // ===== Scenario Modeler Tools =====
+    case "show_scenario_modeler": {
+      const startingMRR = (args.startingMRR as number) || 50000;
+      const monthlyGrowthRate = (args.monthlyGrowthRate as number) || 5;
+      const monthlyChurnRate = (args.monthlyChurnRate as number) || 3;
+      const grossMargin = (args.grossMargin as number) || 80;
+      const fixedCosts = (args.fixedCosts as number) || 30000;
+      return {
+        content: [{ type: "text", text: `SaaS Scenario Modeler loaded with $${startingMRR} MRR` }],
+        structuredContent: { startingMRR, monthlyGrowthRate, monthlyChurnRate, grossMargin, fixedCosts },
+        _meta: { viewUUID: crypto.randomUUID() },
+      };
+    }
+
+    // ===== Customer Segmentation Tools =====
+    case "show_customer_segmentation": {
+      const customerCount = (args.customerCount as number) || 250;
+      return {
+        content: [{ type: "text", text: `Customer Segmentation Explorer loaded with ${customerCount} customers` }],
+        structuredContent: { customerCount },
+        _meta: { viewUUID: crypto.randomUUID() },
+      };
+    }
+
     default:
       return {
         content: [{ type: "text", text: `Unknown tool: ${name}` }],
@@ -660,17 +834,20 @@ async function handleToolCall(
 
 // Resource URI to file path mapping
 const resourceMapping: Record<string, { dir: string; file: string }> = {
-  "ui://weather/app.html": { dir: DIST_DIR, file: "weather.html" },
-  "ui://calculator/app.html": { dir: DIST_DIR, file: "calculator.html" },
-  "ui://map/app.html": { dir: EXT_APPS_DIR, file: "map.html" },
-  "ui://threejs/app.html": { dir: EXT_APPS_DIR, file: "threejs.html" },
-  "ui://pdf/app.html": { dir: EXT_APPS_DIR, file: "pdf.html" },
-  "ui://shadertoy/app.html": { dir: EXT_APPS_DIR, file: "shadertoy.html" },
-  "ui://sheet-music/app.html": { dir: EXT_APPS_DIR, file: "sheet-music.html" },
-  "ui://wiki/app.html": { dir: EXT_APPS_DIR, file: "wiki.html" },
-  "ui://budget/app.html": { dir: EXT_APPS_DIR, file: "budget.html" },
-  "ui://system-monitor/app.html": { dir: EXT_APPS_DIR, file: "system-monitor.html" },
-  "ui://transcript/app.html": { dir: EXT_APPS_DIR, file: "transcript.html" },
+  "ui://weather/app.html": { dir: DIST_DIR, file: "weather/index.html" },
+  "ui://calculator/app.html": { dir: DIST_DIR, file: "calculator/index.html" },
+  "ui://map/app.html": { dir: DIST_DIR, file: "map/index.html" },
+  "ui://threejs/app.html": { dir: DIST_DIR, file: "threejs/index.html" },
+  "ui://pdf/app.html": { dir: DIST_DIR, file: "pdf/index.html" },
+  "ui://shadertoy/app.html": { dir: DIST_DIR, file: "shadertoy/index.html" },
+  "ui://sheet-music/app.html": { dir: DIST_DIR, file: "sheet-music/index.html" },
+  "ui://wiki/app.html": { dir: DIST_DIR, file: "wiki/index.html" },
+  "ui://budget/app.html": { dir: DIST_DIR, file: "budget/index.html" },
+  "ui://system-monitor/app.html": { dir: DIST_DIR, file: "system-monitor/index.html" },
+  "ui://transcript/app.html": { dir: DIST_DIR, file: "transcript/index.html" },
+  "ui://cohort-heatmap/app.html": { dir: DIST_DIR, file: "cohort-heatmap/index.html" },
+  "ui://scenario-modeler/app.html": { dir: DIST_DIR, file: "scenario-modeler/index.html" },
+  "ui://customer-segmentation/app.html": { dir: DIST_DIR, file: "customer-segmentation/index.html" },
 };
 
 // Read UI resource
@@ -697,8 +874,8 @@ async function readResource(uri: string): Promise<string | null> {
   try {
     return await fs.readFile(extAppsPath, "utf-8");
   } catch {
-    // Try original apps directory
-    const appsPath = path.join(DIST_DIR, `${appName}.html`);
+    // Try original apps directory (new structure)
+    const appsPath = path.join(DIST_DIR, appName, "index.html");
     try {
       return await fs.readFile(appsPath, "utf-8");
     } catch {

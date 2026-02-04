@@ -24,12 +24,14 @@ export async function POST(req: NextRequest) {
 
     const result = await response.json();
 
-    // Extract text content from MCP response
-    if (result.content && result.content[0]?.text) {
-      return NextResponse.json({ result: result.content[0].text });
-    }
-
-    return NextResponse.json({ result: JSON.stringify(result) });
+    // Return both text content and structured content for MCP apps
+    const textResult = result.content?.[0]?.text || JSON.stringify(result);
+    
+    return NextResponse.json({ 
+      result: textResult,
+      structuredContent: result.structuredContent,
+      _meta: result._meta,
+    });
   } catch (error) {
     console.error("MCP API error:", error);
     return NextResponse.json(

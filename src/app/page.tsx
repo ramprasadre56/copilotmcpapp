@@ -12,7 +12,8 @@ import { AppSettingsProvider, useAppSettings } from "@/context/AppSettingsContex
 import { TabType } from "@/lib/types";
 
 // Helper function to call MCP tools via API
-async function callMCPTool(toolName: string, args: Record<string, unknown>): Promise<string> {
+// Returns full response including structuredContent for MCP apps (e.g., system-monitor)
+async function callMCPTool(toolName: string, args: Record<string, unknown>): Promise<string | object> {
   const response = await fetch("/api/mcp", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -23,7 +24,8 @@ async function callMCPTool(toolName: string, args: Record<string, unknown>): Pro
   if (data.error) {
     throw new Error(data.error);
   }
-  return data.result;
+  // Return structuredContent if available (for MCP apps), otherwise return text result
+  return data.structuredContent || data.result;
 }
 
 // UI Components for tool results (fallback for tools without interactive UI)

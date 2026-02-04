@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cohort Retention Heatmap</title>
+</head>
+<body>
+  <main class="container">
+    <header class="header">
+      <h1 class="title">Cohort Retention Analysis</h1>
+      <div class="controls">
+        <label class="control">
+          <span>Metric:</span>
+          <select id="metric-select">
+            <option value="retention">Retention %</option>
+            <option value="revenue">Revenue Retention</option>
+            <option value="active">Active Users</option>
+          </select>
+        </label>
+        <label class="control">
+          <span>Period:</span>
+          <select id="period-select">
+            <option value="monthly">Monthly</option>
+            <option value="weekly">Weekly</option>
+          </select>
+        </label>
+      </div>
+    </header>
+    
+    <div class="heatmap-wrapper">
+      <div id="heatmap-grid" class="heatmap-grid"></div>
+    </div>
+    
+    <div class="legend">
+      <span class="legend-item">
+        <span class="legend-color" style="background-color: hsl(108, 70%, 45%);"></span>
+        80-100%
+      </span>
+      <span class="legend-item">
+        <span class="legend-color" style="background-color: hsl(78, 70%, 52.25%);"></span>
+        50-79%
+      </span>
+      <span class="legend-item">
+        <span class="legend-color" style="background-color: hsl(42, 70%, 54.75%);"></span>
+        20-49%
+      </span>
+      <span class="legend-item">
+        <span class="legend-color" style="background-color: hsl(12, 70%, 58.5%);"></span>
+        0-19%
+      </span>
+    </div>
+    
+    <div id="tooltip" class="tooltip" style="display: none;"></div>
+  </main>
+  <script type="module" src="./index.ts"></script>
+</body>
+</html>

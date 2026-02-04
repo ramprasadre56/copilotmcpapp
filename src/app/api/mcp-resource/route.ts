@@ -6,6 +6,15 @@ const MCP_SERVER_URL = process.env.MCP_SERVER_URL || "http://localhost:3100";
 const TOOL_RESOURCE_MAP: Record<string, string> = {
   get_weather: "ui://weather/app.html",
   calculate: "ui://calculator/app.html",
+  show_map: "ui://map/app.html",
+  show_threejs_scene: "ui://threejs/app.html",
+  display_pdf: "ui://pdf/app.html",
+  show_shader: "ui://shadertoy/app.html",
+  show_sheet_music: "ui://sheet-music/app.html",
+  explore_wiki: "ui://wiki/app.html",
+  allocate_budget: "ui://budget/app.html",
+  show_system_monitor: "ui://system-monitor/app.html",
+  show_transcript: "ui://transcript/app.html",
 };
 
 export async function GET(req: NextRequest) {
