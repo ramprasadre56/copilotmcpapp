@@ -888,10 +888,22 @@ async function readResource(uri: string): Promise<string | null> {
 // Create Express server
 async function runHttp() {
   const app = express();
-  app.use(cors());
+  
+  // CORS configuration for production
+  app.use(cors({
+    origin: true, // Allow all origins for now
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+  }));
+  
+  // Handle preflight requests
+  app.options('*', cors());
+  
   app.use(express.json());
 
   const PORT = process.env.PORT || 3100;
+  const HOST = '0.0.0.0'; // Bind to all interfaces for Cloud Run
 
   // MCP endpoint
   app.post("/mcp", async (req, res) => {
@@ -974,10 +986,10 @@ async function runHttp() {
     });
   });
 
-  app.listen(PORT, () => {
-    console.log(`MCP Apps Server running on http://localhost:${PORT}`);
-    console.log(`MCP endpoint: http://localhost:${PORT}/mcp`);
-    console.log(`Resources: http://localhost:${PORT}/resource/{appName}`);
+  app.listen(PORT as number, HOST, () => {
+    console.log(`MCP Apps Server running on http://${HOST}:${PORT}`);
+    console.log(`MCP endpoint: http://${HOST}:${PORT}/mcp`);
+    console.log(`Resources: http://${HOST}:${PORT}/resource/{appName}`);
     console.log(`Available tools: ${tools.map(t => t.name).join(", ")}`);
   });
 }
