@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
+// Build timestamp: 2026-02-06T17:40:00Z - Force fresh deploy
 // Read env var at runtime, not build time
 function getMcpServerUrl() {
   return process.env.MCP_SERVER_URL || "http://localhost:3100";
