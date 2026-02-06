@@ -3,8 +3,13 @@ import { NextRequest, NextResponse } from "next/server";
 const MCP_SERVER_URL = process.env.MCP_SERVER_URL || "http://localhost:3100";
 
 export async function POST(req: NextRequest) {
+  console.log("MCP API called, MCP_SERVER_URL:", MCP_SERVER_URL);
+  
   try {
-    const { toolName, args } = await req.json();
+    const body = await req.json();
+    const { toolName, args } = body;
+    
+    console.log("Calling tool:", toolName, "with args:", JSON.stringify(args));
 
     const response = await fetch(`${MCP_SERVER_URL}/mcp`, {
       method: "POST",
@@ -15,9 +20,13 @@ export async function POST(req: NextRequest) {
       }),
     });
 
+    console.log("MCP server response status:", response.status);
+
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error("MCP call failed:", errorText);
       return NextResponse.json(
-        { error: `MCP call failed: ${response.statusText}` },
+        { error: `MCP call failed: ${response.statusText}`, details: errorText },
         { status: response.status }
       );
     }
@@ -35,8 +44,12 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error("MCP API error:", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
+      { 
+        error: error instanceof Error ? error.message : "Unknown error",
+        mcpServerUrl: MCP_SERVER_URL,
+      },
       { status: 500 }
     );
   }
 }
+
