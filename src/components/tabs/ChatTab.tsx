@@ -6,18 +6,46 @@ import { Icon } from "@/components/ui/Icons";
 import { ArchitectureDiagram } from "@/components/architecture/ArchitectureDiagram";
 import { DetailedArchitecture } from "@/components/architecture/DetailedArchitecture";
 
-function FeatureCard({ title, description, icon }: { title: string; description: string; icon: string }) {
+const features = [
+  {
+    icon: "sparkles",
+    title: "Tool-Native UI",
+    description: "Let agents open pickers, forms, and approvals instead of asking users to respond in text.",
+    gradient: "from-[#6366f1] to-[#8b5cf6]",
+  },
+  {
+    icon: "database",
+    title: "Structured Input",
+    description: "Collect structured input that agents can reliably act on — no more parsing free-form text.",
+    gradient: "from-[#06b6d4] to-[#22d3ee]",
+  },
+  {
+    icon: "arrow-right",
+    title: "In-Product Retention",
+    description: "Keep users inside your product, rather than bouncing them to external chat tools.",
+    gradient: "from-[#ec4899] to-[#f472b6]",
+  },
+  {
+    icon: "wrench",
+    title: "Workflow Integration",
+    description: "Blend agent actions directly into existing workflows and screens for seamless UX.",
+    gradient: "from-[#10b981] to-[#34d399]",
+  },
+];
+
+function FeatureCard({ icon, title, description, gradient, index }: { icon: string; title: string; description: string; gradient: string; index: number }) {
   return (
-    <div className="bg-slate-50 dark:bg-slate-700 rounded-xl p-5 border border-slate-200 dark:border-slate-600 hover:border-blue-300 dark:hover:border-blue-500 transition-colors">
-      <div className="flex items-center gap-3 mb-2">
-        <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
-          <Icon name={icon} className="w-5 h-5" />
-        </div>
-        <h3 className="font-medium text-slate-800 dark:text-white">
-          {title}
-        </h3>
+    <div 
+      className="card-glass p-6 animate-fade-up"
+      style={{ animationDelay: `${index * 100}ms` }}
+    >
+      <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${gradient} flex items-center justify-center text-white mb-5 shadow-lg`}>
+        <Icon name={icon} className="w-6 h-6" />
       </div>
-      <p className="text-slate-600 dark:text-slate-300 text-sm">
+      <h3 className="text-lg font-semibold mb-2 text-[var(--text-primary)]">
+        {title}
+      </h3>
+      <p className="text-[var(--text-secondary)] text-sm leading-relaxed">
         {description}
       </p>
     </div>
@@ -29,127 +57,110 @@ export function ChatTab() {
   const enabledAppsList = appRegistry.filter((app) => enabledApps.includes(app.id));
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-16 py-8">
       {/* Hero Section */}
-      <section className="text-center py-6">
-        <h1 className="text-4xl font-bold text-slate-900 dark:text-white mb-4">
-          CopilotKit MCP Apps
-        </h1>
-        <p className="text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
-          Interactive AI-powered applications with Model Context Protocol.
-          Chat with your AI assistant to execute tools and see results.
-        </p>
+      <section className="text-center py-20 relative">
+        <div className="relative z-10 max-w-3xl mx-auto">
+          <div className="inline-flex items-center gap-2 px-4 py-2 mb-6 text-sm font-medium text-[var(--accent-primary)] bg-[var(--accent-primary)]/10 rounded-full">
+            <span className="w-2 h-2 rounded-full bg-[var(--accent-success)]" />
+            Model Context Protocol
+          </div>
+          
+          <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight text-[var(--text-primary)]">
+            Build MCP Apps with{" "}
+            <span className="text-gradient">CopilotKit</span>
+          </h1>
+          
+          <p className="text-lg md:text-xl text-[var(--text-secondary)] max-w-2xl mx-auto leading-relaxed mb-10">
+            Build MCP-powered interactions directly into your agentic application. 
+            CopilotKit makes MCP Apps usable inside real, user-facing applications.
+          </p>
+
+          <div className="flex items-center justify-center gap-4 flex-wrap">
+            <button className="btn-primary">
+              <span>Get Started</span>
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </button>
+            <button className="btn-ghost">
+              View Documentation
+            </button>
+          </div>
+        </div>
       </section>
 
-      {/* Architecture Diagram */}
+      {/* Features Grid */}
       <section>
-        <h2 className="text-xl font-semibold text-slate-800 dark:text-white mb-4">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold text-[var(--text-primary)] mb-4">
+            Your App + MCP Apps
+          </h2>
+          <p className="text-[var(--text-secondary)] max-w-xl mx-auto">
+            CopilotKit and AG-UI bring MCP apps into your application — where you control UX, permissions, and workflows.
+          </p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {features.map((feature, index) => (
+            <FeatureCard key={feature.title} {...feature} index={index} />
+          ))}
+        </div>
+      </section>
+
+      {/* Architecture */}
+      <section className="card-glass p-8">
+        <h2 className="text-2xl font-bold mb-6 text-[var(--text-primary)]">
           System Architecture
         </h2>
         <ArchitectureDiagram />
       </section>
 
-      {/* Detailed Technical Architecture */}
-      <section>
-        <h2 className="text-xl font-semibold text-slate-800 dark:text-white mb-4">
-          Technical Architecture
+      {/* Technical Architecture */}
+      <section className="card-glass p-8">
+        <h2 className="text-2xl font-bold mb-6 text-[var(--text-primary)]">
+          Technical Details
         </h2>
         <DetailedArchitecture />
       </section>
 
-      {/* Getting Started */}
-      <section className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-6">
-        <h2 className="text-xl font-semibold text-slate-800 dark:text-white mb-4">
-          Getting Started
-        </h2>
-        <p className="text-slate-600 dark:text-slate-300 mb-6">
-          Open the chat sidebar on the right to interact with your AI copilot.
-          The copilot can help you with various tasks using the enabled MCP tools.
-        </p>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FeatureCard
-            icon="message-square"
-            title="MCP Integration"
-            description="Connect to MCP servers to extend your AI's capabilities with custom tools."
-          />
-          <FeatureCard
-            icon="sparkles"
-            title="Generative UI"
-            description="AI can generate interactive UI components directly in the chat."
-          />
-          <FeatureCard
-            icon="arrow-right"
-            title="Real-time Streaming"
-            description="Get instant responses with streaming AI completions."
-          />
-          <FeatureCard
-            icon="wrench"
-            title="Tool Execution"
-            description="Execute tools and see results rendered in the chat interface."
-          />
-        </div>
-      </section>
-
       {/* Active Tools */}
-      <section className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-slate-800 dark:text-white">
-            Active Tools
+      <section className="card-glass p-8">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold text-[var(--text-primary)]">
+            Active MCP Tools
           </h2>
-          <span className="text-sm text-slate-500 dark:text-slate-400">
-            {enabledAppsList.length} of {appRegistry.length} enabled
+          <span className="text-sm text-[var(--text-muted)] bg-[var(--bg-primary)] px-3 py-1 rounded-full">
+            {enabledAppsList.length} of {appRegistry.length}
           </span>
         </div>
 
         {enabledAppsList.length === 0 ? (
-          <p className="text-slate-500 dark:text-slate-400 text-center py-8">
-            No tools enabled. Go to the Apps tab to enable some tools.
-          </p>
+          <div className="text-center py-12">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-[var(--bg-primary)] flex items-center justify-center">
+              <Icon name="grid" className="w-8 h-8 text-[var(--text-muted)]" />
+            </div>
+            <p className="text-[var(--text-secondary)]">
+              No tools enabled. Go to the <strong>Apps</strong> tab to enable some tools.
+            </p>
+          </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {enabledAppsList.map((app) => (
               <div
                 key={app.id}
-                className="flex items-center gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-700/50"
+                className="flex items-center gap-3 p-3 rounded-xl bg-[var(--bg-primary)] border border-[var(--glass-border)] hover:shadow-md transition-shadow"
               >
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white">
-                  <Icon name={app.icon} className="w-4 h-4" />
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] flex items-center justify-center text-white shadow-md shrink-0">
+                  <Icon name={app.icon} className="w-5 h-5" />
                 </div>
-                <div>
-                  <div className="font-medium text-slate-900 dark:text-white text-sm">
-                    {app.name}
-                  </div>
-                  <div className="text-xs text-slate-500 dark:text-slate-400">
-                    {app.toolName}
-                  </div>
+                <div className="min-w-0">
+                  <div className="text-sm font-medium text-[var(--text-primary)] truncate">{app.name}</div>
+                  <div className="text-xs text-[var(--text-muted)] truncate">{app.toolName}</div>
                 </div>
               </div>
             ))}
           </div>
         )}
-      </section>
-
-      {/* How It Works */}
-      <section className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-6">
-        <h2 className="text-xl font-semibold text-slate-800 dark:text-white mb-4">
-          How It Works
-        </h2>
-        <ol className="space-y-3">
-          {[
-            "Enable the tools you want to use in the Apps tab",
-            "Open the chat sidebar and start a conversation",
-            "Ask the AI to perform tasks using natural language",
-            "The AI will use the appropriate tools to help you",
-          ].map((step, index) => (
-            <li key={index} className="flex items-start gap-3">
-              <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center text-sm font-medium">
-                {index + 1}
-              </span>
-              <span className="text-slate-600 dark:text-slate-300">{step}</span>
-            </li>
-          ))}
-        </ol>
       </section>
     </div>
   );

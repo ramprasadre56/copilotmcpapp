@@ -1,3 +1,7 @@
+# Ignore temp directories
+temp_ext_apps_v2/
+
+# Ignore development files
 node_modules/
 .next/
 dist/
@@ -9,6 +13,5 @@ coverage/
 .vscode/
 *.log
 nul
-ext-apps/nul
-ext-apps/
-.vercel
+
+

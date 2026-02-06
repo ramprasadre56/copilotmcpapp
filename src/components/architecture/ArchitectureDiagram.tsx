@@ -35,7 +35,7 @@ export function ArchitectureDiagram() {
   });
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-6 overflow-x-auto">
+    <div className="card-glass rounded-2xl p-6 overflow-x-auto">
       {/* Diagram */}
       <div className="flex items-center justify-center gap-2 min-w-max py-8">
         {nodesWithDynamicData.map((node, index) => (
@@ -52,13 +52,6 @@ export function ArchitectureDiagram() {
           </div>
         ))}
       </div>
-
-      {/* Click hint */}
-      {!selectedNode && (
-        <p className="text-center text-sm text-slate-500 dark:text-slate-400 mt-4">
-          Click on a node to see more details
-        </p>
-      )}
 
       {/* Details Panel */}
       {selectedNodeData && (

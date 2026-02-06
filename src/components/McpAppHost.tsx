@@ -302,12 +302,13 @@ export function McpAppHost({
   if (error) {
     return (
       <div
+        className="card-glass"
         style={{
           padding: "16px",
-          background: "#fef2f2",
-          border: "1px solid #fecaca",
-          borderRadius: "8px",
-          color: "#dc2626",
+          background: "rgba(239, 68, 68, 0.1)",
+          border: "1px solid rgba(239, 68, 68, 0.3)",
+          borderRadius: "var(--radius-lg)",
+          color: "var(--accent-danger)",
         }}
       >
         <strong>Error loading UI:</strong> {error}
@@ -317,11 +318,11 @@ export function McpAppHost({
 
   return (
     <div
+      className="card-glass animate-fade-up"
       style={{
         position: "relative",
-        borderRadius: "12px",
+        borderRadius: "var(--radius-lg)",
         overflow: "hidden",
-        background: "#f8fafc",
       }}
     >
       {isLoading && (
@@ -332,23 +333,24 @@ export function McpAppHost({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            background: "#f8fafc",
+            background: "var(--glass-bg)",
+            backdropFilter: "blur(10px)",
             zIndex: 10,
           }}
         >
-          <div style={{ textAlign: "center", color: "#64748b" }}>
+          <div style={{ textAlign: "center" }}>
             <div
               style={{
-                width: "32px",
-                height: "32px",
-                border: "3px solid #e2e8f0",
-                borderTopColor: "#3b82f6",
+                width: "40px",
+                height: "40px",
                 borderRadius: "50%",
+                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
                 animation: "spin 1s linear infinite",
-                margin: "0 auto 8px",
+                margin: "0 auto 12px",
+                boxShadow: "0 0 20px rgba(102, 126, 234, 0.4)",
               }}
             />
-            Loading {toolName} UI...
+            <span style={{ opacity: 0.7, fontSize: "14px" }}>Loading {toolName}...</span>
           </div>
         </div>
       )}

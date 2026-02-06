@@ -4,7 +4,7 @@ import { useState } from "react";
 import { CopilotSidebar } from "@copilotkit/react-ui";
 import { useCopilotAction } from "@copilotkit/react-core";
 import { McpAppHost } from "@/components/McpAppHost";
-import { Tabs } from "@/components/ui/Tabs";
+import { Header } from "@/components/ui/Header";
 import { ChatTab } from "@/components/tabs/ChatTab";
 import { AppsTab } from "@/components/tabs/AppsTab";
 import { ArchitectureTab } from "@/components/tabs/ArchitectureTab";
@@ -552,18 +552,16 @@ function MainContent() {
   const [activeTab, setActiveTab] = useState<TabType>("chat");
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+    <div className="flex flex-col min-h-screen bg-space bg-noise">
       {/* Tool Registration */}
       <DynamicToolRegistration />
 
+      {/* Header with Navigation */}
+      <Header activeTab={activeTab} onTabChange={setActiveTab} />
+
       {/* Main Content Area */}
       <main className="flex-1 p-4 lg:p-8 overflow-auto">
-        <div className="max-w-5xl mx-auto">
-          {/* Tab Navigation */}
-          <div className="mb-6">
-            <Tabs activeTab={activeTab} onTabChange={setActiveTab} />
-          </div>
-
+        <div className="max-w-6xl mx-auto animate-fade-in">
           {/* Tab Content */}
           <div className="min-h-[calc(100vh-150px)]">
             {activeTab === "chat" && <ChatTab />}

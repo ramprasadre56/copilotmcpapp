@@ -3,7 +3,7 @@
 import { ButtonHTMLAttributes, forwardRef } from "react";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary" | "danger" | "ghost";
+  variant?: "primary" | "secondary" | "ghost" | "danger";
   size?: "sm" | "md" | "lg";
 }
 
@@ -11,37 +11,38 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className = "", variant = "primary", size = "md", children, ...props }, ref) => {
     const baseStyles = `
       inline-flex items-center justify-center gap-2 font-medium
-      rounded-lg transition-all duration-200 ease-out
-      focus:outline-none focus:ring-2 focus:ring-offset-2
+      transition-all duration-200 ease-out
       disabled:opacity-50 disabled:cursor-not-allowed
+      focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-transparent
     `;
 
     const variants = {
       primary: `
-        bg-blue-600 text-white hover:bg-blue-700
-        focus:ring-blue-500 dark:focus:ring-offset-slate-900
+        bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white
+        hover:shadow-lg hover:shadow-[#667eea]/30 hover:-translate-y-0.5
+        focus:ring-[#667eea]/50
       `,
       secondary: `
-        bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white
-        hover:bg-slate-200 dark:hover:bg-slate-600
-        focus:ring-slate-500 dark:focus:ring-offset-slate-900
-      `,
-      danger: `
-        bg-red-600 text-white hover:bg-red-700
-        focus:ring-red-500 dark:focus:ring-offset-slate-900
+        glass-card text-[var(--foreground)]
+        hover:bg-[var(--surface-hover)] hover:-translate-y-0.5
+        focus:ring-[var(--border)]
       `,
       ghost: `
-        bg-transparent text-slate-600 dark:text-slate-400
-        hover:bg-slate-100 dark:hover:bg-slate-800
-        hover:text-slate-900 dark:hover:text-white
-        focus:ring-slate-500 dark:focus:ring-offset-slate-900
+        text-[var(--foreground)] opacity-70
+        hover:opacity-100 hover:bg-[var(--surface)]
+        focus:ring-[var(--border)]
+      `,
+      danger: `
+        bg-red-500/10 text-red-400 border border-red-500/20
+        hover:bg-red-500/20
+        focus:ring-red-500/50
       `,
     };
 
     const sizes = {
-      sm: "px-3 py-1.5 text-sm",
-      md: "px-4 py-2 text-sm",
-      lg: "px-6 py-3 text-base",
+      sm: "text-sm px-3 py-1.5 rounded-lg",
+      md: "text-sm px-4 py-2 rounded-xl",
+      lg: "text-base px-6 py-3 rounded-xl",
     };
 
     return (
