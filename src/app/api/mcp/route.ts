@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const MCP_SERVER_URL = process.env.MCP_SERVER_URL || "http://localhost:3100";
+// Read env var at runtime, not build time
+function getMcpServerUrl() {
+  return process.env.MCP_SERVER_URL || "http://localhost:3100";
+}
 
 export async function POST(req: NextRequest) {
+  const MCP_SERVER_URL = getMcpServerUrl();
   console.log("MCP API called, MCP_SERVER_URL:", MCP_SERVER_URL);
   
   try {

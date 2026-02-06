@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const MCP_SERVER_URL = process.env.MCP_SERVER_URL || "http://localhost:3100";
+// Read env var at runtime, not build time
+function getMcpServerUrl() {
+  return process.env.MCP_SERVER_URL || "http://localhost:3100";
+}
 
 // Map tool names to their UI resource URIs
 const TOOL_RESOURCE_MAP: Record<string, string> = {
@@ -18,6 +21,7 @@ const TOOL_RESOURCE_MAP: Record<string, string> = {
 };
 
 export async function GET(req: NextRequest) {
+  const MCP_SERVER_URL = getMcpServerUrl();
   const tool = req.nextUrl.searchParams.get("tool");
 
   console.log("MCP_SERVER_URL:", MCP_SERVER_URL);
