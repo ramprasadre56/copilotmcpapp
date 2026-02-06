@@ -20,6 +20,9 @@ const TOOL_RESOURCE_MAP: Record<string, string> = {
 export async function GET(req: NextRequest) {
   const tool = req.nextUrl.searchParams.get("tool");
 
+  console.log("MCP_SERVER_URL:", MCP_SERVER_URL);
+  console.log("Requested tool:", tool);
+
   if (!tool) {
     return NextResponse.json({ error: "Missing tool parameter" }, { status: 400 });
   }
@@ -36,10 +39,15 @@ export async function GET(req: NextRequest) {
   try {
     // Try direct resource endpoint first (simpler)
     const appName = resourceUri.match(/^ui:\/\/([^/]+)/)?.[1];
+    const fetchUrl = `${MCP_SERVER_URL}/resource/${appName}`;
+    console.log("Fetching resource from:", fetchUrl);
 
     if (appName) {
-      const directResponse = await fetch(`${MCP_SERVER_URL}/resource/${appName}`, {
+      const directResponse = await fetch(fetchUrl, {
         cache: "no-store",
+        headers: {
+          "Accept": "text/html",
+        },
       });
 
       if (directResponse.ok) {
